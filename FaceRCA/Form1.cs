@@ -54,7 +54,7 @@ namespace FaceRCA
 
         Dictionary<string, Process> rutas = new Dictionary<string, Process>();
         Process[] allRunningPrograms;
-        Boolean continuar=false;
+        Boolean continuar = true;
         Boolean respuesta = false;
         // Configuración de la API de Face de Azure
         string endpoint = "https://apirf.cognitiveservices.azure.com/";
@@ -89,22 +89,33 @@ namespace FaceRCA
                 rutas.Add("Teams", allRunningPrograms[0]);
             }
         }
-
-        private void GrabarVideo_Click(object sender, EventArgs e)
+        private Boolean Colocar()
         {
-            continuar = true;
             if (procesosEN.Text == "Zoom")
             {
-               Foto("Zoom Reunión");
-               //AnalisisAsync();
+                Foto("Zoom Reunión");
+                return respuesta;
             }
             else if (procesosEN.Text == "Discord")
             {
                 Foto("Discord");
+                return respuesta;
             }
             else if (procesosEN.Text == "Teams")
             {
-                MessageBox.Show("Desarrollo");
+                Foto("msteams");
+                return respuesta;
+            }
+            return respuesta;
+        }
+        private void GrabarVideo_Click(object sender, EventArgs e)
+        {
+            Boolean data = Colocar();
+            while (continuar || data)
+            {
+                AnalisisAsync();
+                data = Colocar();
+                Thread.Sleep(3500);
             }
         }
         private void Refresco_Click(object sender, EventArgs e)
@@ -141,14 +152,15 @@ namespace FaceRCA
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
         private void procesosEN_SelectedIndexChanged(object sender, EventArgs e)
         {
+            Boolean data = Colocar();
         }
-        private void Foto(string x)
+        private Boolean Foto (string x)
         {
             IntPtr hWnd = FindWindowByTitle(x);
 
             if (hWnd != IntPtr.Zero)
             {
-                // Obtiene el tamaño de la ventana de llamada de Zoom
+                // Obtiene el tamaño de la ventana de llamada
                 Rectangle windowRect;
                 GetWindowRect(hWnd, out windowRect);
                 int width = windowRect.Width;
@@ -169,11 +181,13 @@ namespace FaceRCA
 
                 Console.ReadLine();
                 respuesta = true;
+                return respuesta;
             }
             else
             {
                 MessageBox.Show("NO hay una llamada activa");  
             }
+            return respuesta;
         }
         private void DetenerVideo_Click(object sender, EventArgs e)
         {
